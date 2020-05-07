@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+    <title>Sign In</title>
+</head>
+<body>
+    <input id="name" autocomplete="off" /><button onclick="submit()" name="Log In">Submit</button>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+    var socket = io();
+
+    function submit(){
+        var id = s4();
+        var data = {name: $('#name').val(), id: id}
+        socket.send(data);
+
+        location.href = '/room?id=' + id;
+        return false;
+    }
+
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+</script>
+</body>
+</html>

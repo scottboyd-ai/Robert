@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+    <title>Socket.IO chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 13px Helvetica, Arial; }
+        form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+        form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+        #messages { list-style-type: none; margin: 0; padding: 0; }
+        #messages li { padding: 5px 10px; }
+        #messages li:nth-child(odd) { background: #eee; }
+    </style>
+</head>
+<body>
+<div>
+    <div style="float: left; width:20%">
+        <ul id="speakList"></ul>
+    </div>
+    <div style="float: right; width: 80%">
+        <table>
+            <tr>
+                <td>
+                    <button onclick="speak()">Speak</button>
+                </td>
+                <td>
+                    <button onclick="spoke()">Spoke</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button onclick="motion()">Propose Motion</button>
+                    <div id="motion">
+                        <textarea id="motionText" name="motionText"></textarea>
+                        <button id="submitMotion" onclick="submitMotion()">Submit Motion</button>
+                    </div>
+                    <button id="second" onclick="secondMotion()">Second The Motion</button>
+                </td>
+            </tr>
+            <tr>
+                <div id="motionOnFloor">
+                    <p id="motionOnFloorText" name="motionOnFloorText" contenteditable="false"></p>
+                    <button onclick="amendMotion()">Amend This Motion</button>
+                </div>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+    var id = window.location.href.split('id=')[ 1 ];
+    var socket = io();
+
+    $('#motion').hide();
+    $('#motionOnFloor').hide();
+    $('#second').hide();
+
+    socket.on('chat message', function(msg){
+        if(msg && msg.name && msg.msg){
+            $('#speakList').append($('<li>').append('<b>' + msg.name +': </b>').append(msg.msg));
+        }
+    });
+
+    socket.on('speaker list update', function(speakerList){
+        var list = $('#speakList');
+        list.empty();
+        list.append(speakerList);
+    });
+
+    socket.on('awaiting second', function(motion){
+        $('#motion').show();
+        $('#submitMotion').hide();
+        $('#motionText').attr('readonly', true)
+        $('#motionText').val(motion.motionText);
+        $('#second').show();
+
+    });
+
+    socket.on('motion on floor', function(motionText){
+        $('#motion').hide();
+        $('#motionOnFloor').show();
+        $('#motionOnFloorText').text(motionText);
+    });
+
+    function speak(){
+        socket.emit('speak', id);
+    }
+
+    function spoke(){
+        socket.emit('spoke', id);
+    }
+    function motion(){
+        $('#motion').show();
+    }
+    function submitMotion(){
+        socket.emit('motion', {motionText: $('#motionText').val(), id: id})
+    }
+    function secondMotion(){
+        socket.emit('motion seconded', id);
+    }
+    function amendMotion(){
+
+    }
+</script>
+</body>
+</html>
